@@ -145,9 +145,14 @@ class HeroesViewController: UIViewController {
         // Clear the token
         SecureDataService.shared.clearToken()
         
-        // Navigate to login - since we always have login in our navigation stack
-        let loginVC = LoginViewController()
-        navigationController?.setViewControllers([loginVC], animated: true)
+        // Navigate back to login screen
+        if let loginVC = navigationController?.viewControllers.first {
+            navigationController?.popToViewController(loginVC, animated: true)
+        } else {
+            // If no login in stack, create new one
+            let loginVC = LoginViewController()
+            navigationController?.setViewControllers([loginVC], animated: true)
+        }
     }
     
     // MARK: - Helpers
