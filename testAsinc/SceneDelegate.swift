@@ -10,7 +10,6 @@ import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
-    let loginVC = LoginViewController(loginService: MockLoginService())
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -18,11 +17,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window = UIWindow(windowScene: windowScene)
         
-        // Create the login view controller
-        let loginVC = LoginViewController()
+        // Start with the splash screen (it will check authentication)
+        let splashVC = SplashViewController()
         
         // Wrap it in a navigation controller
-        let navigationController = UINavigationController(rootViewController: loginVC)
+        let navigationController = UINavigationController(rootViewController: splashVC)
         
         // Set as root and make visible
         window?.rootViewController = navigationController

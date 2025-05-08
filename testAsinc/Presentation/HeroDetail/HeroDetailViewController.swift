@@ -7,8 +7,8 @@
 
 
 import UIKit
-import MapKit
 import Kingfisher
+import Combine
 
 class HeroDetailViewController: UIViewController {
     
@@ -53,10 +53,37 @@ class HeroDetailViewController: UIViewController {
         return label
     }()
     
-    private let mapView: MKMapView = {
-        let mapView = MKMapView()
-        mapView.translatesAutoresizingMaskIntoConstraints = false
-        return mapView
+    private let transformationsLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.text = String(localized: "detail.transformations")
+        return label
+    }()
+    
+    private let transformationsCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.itemSize = CGSize(width: 120, height: 150)
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 10
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .clear
+        collectionView.showsHorizontalScrollIndicator = false
+        return collectionView
+    }()
+    
+    private let noTransformationsLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.text = String(localized: "detail.noTransformations")
+        label.isHidden = true
+        return label
     }()
     
     private let activityIndicator: UIActivityIndicatorView = {
@@ -67,13 +94,12 @@ class HeroDetailViewController: UIViewController {
     }()
     
     // MARK: - Properties
-    private let hero: Hero
-    private let heroDetailService: HeroDetailServiceProtocol
+    private let viewModel: HeroDetailViewModel
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
-    init(hero: Hero, heroDetailService: HeroDetailServiceProtocol = HeroDetailService()) {
-        self.hero = hero
-        self.heroDetailService = heroDetailService
+    init(viewModel: HeroDetailViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -85,14 +111,17 @@ class HeroDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureWithHero()
-        loadHeroLocations()
+        setupCollectionView()
+        setupBindings()
+        
+        // Load data
+        viewModel.loadData()
     }
     
     // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = hero.name
+        title = viewModel.hero.name
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -100,8 +129,10 @@ class HeroDetailViewController: UIViewController {
         contentView.addSubview(heroImageView)
         contentView.addSubview(nameLabel)
         contentView.addSubview(descriptionLabel)
-        contentView.addSubview(mapView)
-        mapView.addSubview(activityIndicator)
+        contentView.addSubview(transformationsLabel)
+        contentView.addSubview(transformationsCollectionView)
+        contentView.addSubview(noTransformationsLabel)
+        view.addSubview(activityIndicator)
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -128,23 +159,31 @@ class HeroDetailViewController: UIViewController {
             descriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
-            mapView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 16),
-            mapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            mapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            mapView.heightAnchor.constraint(equalToConstant: 200),
-            mapView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            transformationsLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 16),
+            transformationsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            transformationsLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
-            activityIndicator.centerXAnchor.constraint(equalTo: mapView.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: mapView.centerYAnchor)
+            transformationsCollectionView.topAnchor.constraint(equalTo: transformationsLabel.bottomAnchor, constant: 8),
+            transformationsCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            transformationsCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            transformationsCollectionView.heightAnchor.constraint(equalToConstant: 150),
+            transformationsCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            
+            noTransformationsLabel.topAnchor.constraint(equalTo: transformationsLabel.bottomAnchor, constant: 8),
+            noTransformationsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            noTransformationsLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            noTransformationsLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
-    }
-    
-    private func configureWithHero() {
-        nameLabel.text = hero.name
-        descriptionLabel.text = hero.description
+        
+        // Configure with hero
+        nameLabel.text = viewModel.hero.name
+        descriptionLabel.text = viewModel.hero.description
         
         // Load hero image with Kingfisher
-        if let photoURLString = hero.photo, let photoURL = URL(string: photoURLString) {
+        if let photoURLString = viewModel.hero.photo, let photoURL = URL(string: photoURLString) {
             heroImageView.kf.setImage(
                 with: photoURL,
                 placeholder: UIImage(systemName: "person.fill"),
@@ -158,58 +197,97 @@ class HeroDetailViewController: UIViewController {
         }
     }
     
-    // MARK: - Data Loading
-    private func loadHeroLocations() {
-        activityIndicator.startAnimating()
-        
-        heroDetailService.getHeroLocations(heroId: hero.id) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.activityIndicator.stopAnimating()
-                
-                switch result {
-                case .success(let locations):
-                    self?.showLocationsOnMap(locations)
-                case .failure(let error):
-                    self?.showError(error.localizedDescription)
-                }
+    private func setupCollectionView() {
+        transformationsCollectionView.delegate = self
+        transformationsCollectionView.dataSource = self
+        transformationsCollectionView.register(TransformationCell.self, forCellWithReuseIdentifier: "TransformationCell")
+    }
+    
+    private func setupBindings() {
+        // Observe transformations
+        viewModel.$transformations
+            .receive(on: RunLoop.main)
+            .sink { [weak self] transformations in
+                self?.updateTransformationsUI(transformations: transformations)
             }
+            .store(in: &cancellables)
+        
+        // Observe state
+        viewModel.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] state in
+                self?.updateUI(with: state)
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - UI Updates
+    private func updateUI(with state: HeroDetailState) {
+        switch state {
+        case .initial:
+            activityIndicator.stopAnimating()
+        case .loading:
+            activityIndicator.startAnimating()
+        case .loaded:
+            activityIndicator.stopAnimating()
+        case .error(let message):
+            activityIndicator.stopAnimating()
+            showErrorAlert(message: message)
         }
     }
     
-    private func showLocationsOnMap(_ locations: [HeroLocation]) {
-        // Remove existing annotations
-        mapView.removeAnnotations(mapView.annotations)
-        
-        // Create annotations from locations
-        var annotations: [MKPointAnnotation] = []
-        
-        for location in locations {
-            if let coordinate = location.coordinate {
-                let annotation = MKPointAnnotation()
-                annotation.coordinate = coordinate
-                annotation.title = hero.name
-                annotations.append(annotation)
-            }
-        }
-        
-        // Add annotations to map
-        mapView.addAnnotations(annotations)
-        
-        // Zoom to show all annotations if there are any
-        if !annotations.isEmpty {
-            mapView.showAnnotations(annotations, animated: true)
+    private func updateTransformationsUI(transformations: [Transformation]) {
+        if transformations.isEmpty {
+            transformationsCollectionView.isHidden = true
+            noTransformationsLabel.isHidden = false
         } else {
-            // If no locations, show a default location (e.g., Tokyo, Japan as a placeholder)
-            let defaultLocation = CLLocationCoordinate2D(latitude: 35.6895, longitude: 139.6917)
-            let region = MKCoordinateRegion(center: defaultLocation, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
-            mapView.setRegion(region, animated: true)
+            transformationsCollectionView.isHidden = false
+            noTransformationsLabel.isHidden = true
+            transformationsCollectionView.reloadData()
         }
     }
     
     // MARK: - Helpers
-    private func showError(_ message: String) {
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(
+            title: "common.error".localized,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(
+            title: "common.ok".localized,
+            style: .default
+        ))
+        
         present(alert, animated: true)
+    }
+    
+    // MARK: - Show Transformation Detail
+    private func showTransformationDetail(transformation: Transformation) {
+        let transformationVC = TransformationDetailViewController(transformation: transformation)
+        present(transformationVC, animated: true)
+    }
+}
+
+// MARK: - UICollectionViewDataSource, UICollectionViewDelegate
+extension HeroDetailViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return viewModel.transformations.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TransformationCell", for: indexPath) as? TransformationCell else {
+            return UICollectionViewCell()
+        }
+        
+        let transformation = viewModel.transformations[indexPath.item]
+        cell.configure(with: transformation)
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let transformation = viewModel.transformations[indexPath.item]
+        showTransformationDetail(transformation: transformation)
     }
 }

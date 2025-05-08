@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6B0C66BC2DCCFB4400A43B0D /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 6B0C66BB2DCCFB4400A43B0D /* KeychainSwift */; };
 		6B0C66D22DCD054B00A43B0D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 6B0C66D12DCD054B00A43B0D /* Kingfisher */; };
+		6B0C66E12DCD371800A43B0D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 6B0C66E02DCD371800A43B0D /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		6B0C65502DCCDB1E00A43B0D /* testAsinc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = testAsinc.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B0C65662DCCDB1F00A43B0D /* testAsincTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = testAsincTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B0C65702DCCDB1F00A43B0D /* testAsincUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = testAsincUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B0C66E02DCD371800A43B0D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -95,6 +97,7 @@
 		6B0C65472DCCDB1E00A43B0D = {
 			isa = PBXGroup;
 			children = (
+				6B0C66E02DCD371800A43B0D /* Localizable.xcstrings */,
 				6B0C65522DCCDB1E00A43B0D /* testAsinc */,
 				6B0C65692DCCDB1F00A43B0D /* testAsincTests */,
 				6B0C65732DCCDB1F00A43B0D /* testAsincUITests */,
@@ -214,6 +217,7 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
 			);
 			mainGroup = 6B0C65472DCCDB1E00A43B0D;
 			minimizedProjectReferenceProxies = 1;
@@ -238,6 +242,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B0C66E12DCD371800A43B0D /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,6 +310,8 @@
 				DEVELOPMENT_TEAM = VAA9LFFTNJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = testAsinc/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -332,6 +339,8 @@
 				DEVELOPMENT_TEAM = VAA9LFFTNJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = testAsinc/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -408,6 +417,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -464,6 +474,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

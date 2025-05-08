@@ -41,15 +41,6 @@ class SplashViewController: UIViewController {
         setupUI()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        // Simulate loading delay and then navigate
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.checkAuthAndNavigate()
-        }
-    }
-    
     // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .systemBackground
@@ -77,16 +68,33 @@ class SplashViewController: UIViewController {
     }
     
     // MARK: - Navigation
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Check authentication after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.checkAuthAndNavigate()
+        }
+    }
+    
     private func checkAuthAndNavigate() {
-        // For now, always navigate to login
-        // Later we'll check if the user is logged in
-        navigateToLogin()
+        // Check if user has a valid token
+        if SecureDataService.shared.getToken() != nil {
+            // User is logged in, go to heroes
+            navigateToHeroes()
+        } else {
+            // User is not logged in, go to login
+            navigateToLogin()
+        }
     }
     
     private func navigateToLogin() {
         let loginVC = LoginViewController()
-        let navigationController = UINavigationController(rootViewController: loginVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        present(navigationController, animated: true)
+        navigationController?.setViewControllers([loginVC], animated: true)
+    }
+    
+    private func navigateToHeroes() {
+        let heroesVC = HeroesViewController()
+        navigationController?.setViewControllers([heroesVC], animated: true)
     }
 }

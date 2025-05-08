@@ -17,7 +17,7 @@ class LoginViewController: UIViewController {
     private let emailTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.placeholder = "Email"
+        textField.placeholder = String(localized: "login.email")
         textField.borderStyle = .roundedRect
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no

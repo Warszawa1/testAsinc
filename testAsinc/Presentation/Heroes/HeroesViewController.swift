@@ -76,16 +76,21 @@ class HeroesViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
+        title = "heroes.title".localized
         navigationItem.hidesBackButton = true // Prevent going back to login
         
-        // Add logout button
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Logout",
+        // Create logout button with proper icon
+        let logoutButton = UIBarButtonItem(
+            image: UIImage(systemName: "rectangle.portrait.and.arrow.right"),
             style: .plain,
             target: self,
             action: #selector(logoutTapped)
         )
+        logoutButton.tintColor = .systemRed
+        
+        navigationItem.rightBarButtonItem = logoutButton
     }
+
     
     // MARK: - Data Loading
     private func loadHeroes() {
@@ -108,11 +113,41 @@ class HeroesViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func logoutTapped() {
-        // Clear saved token
+        // Create confirmation alert
+        let alert = UIAlertController(
+            title: "logout.confirm.title".localized,
+            message: "logout.confirm.message".localized,
+            preferredStyle: .alert
+        )
+        
+        // Cancel action
+        alert.addAction(UIAlertAction(
+            title: "common.cancel".localized,
+            style: .cancel,
+            handler: nil
+        ))
+        
+        // Logout action
+        alert.addAction(UIAlertAction(
+            title: "logout.confirm.button".localized,
+            style: .destructive,
+            handler: { [weak self] _ in
+                // Perform logout
+                self?.performLogout()
+            }
+        ))
+        
+        // Present the alert
+        present(alert, animated: true)
+    }
+
+    private func performLogout() {
+        // Clear the token
         SecureDataService.shared.clearToken()
         
-        // Navigate back to login screen
-        navigationController?.popToRootViewController(animated: true)
+        // Navigate to login - since we always have login in our navigation stack
+        let loginVC = LoginViewController()
+        navigationController?.setViewControllers([loginVC], animated: true)
     }
     
     // MARK: - Helpers
@@ -154,8 +189,13 @@ extension HeroesViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let hero = heroes[indexPath.item]
         
+        // Create the view model with hero and service (defaults to HeroDetailService())
+        let heroDetailViewModel = HeroDetailViewModel(hero: hero)
+        
+        // Create the view controller with the view model
+        let detailVC = HeroDetailViewController(viewModel: heroDetailViewModel)
+        
         // Navigate to hero detail
-        let detailVC = HeroDetailViewController(hero: hero)
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
