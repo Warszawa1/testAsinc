@@ -197,6 +197,8 @@ class HeroDetailViewController: UIViewController {
         }
     }
     
+    
+    
     private func setupCollectionView() {
         transformationsCollectionView.delegate = self
         transformationsCollectionView.dataSource = self
@@ -230,6 +232,9 @@ class HeroDetailViewController: UIViewController {
             activityIndicator.startAnimating()
         case .loaded:
             activityIndicator.stopAnimating()
+            UIView.animate(withDuration: 0.3) {
+                self.transformationsCollectionView.alpha = 1.0
+            }
         case .error(let message):
             activityIndicator.stopAnimating()
             showErrorAlert(message: message)

@@ -6,48 +6,34 @@
 //
 
 
+// HeroCell.swift
+
 import UIKit
 import Kingfisher
 
 class HeroCell: UICollectionViewCell {
     
-    static let identifier = "HeroCell"
+    static let identifier = String(describing: HeroCell.self)
     
-    // MARK: - UI Components
-    private let containerView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .systemGray6
-        view.layer.cornerRadius = 8
-        view.clipsToBounds = true
-        return view
-    }()
-    
-    private let imageView: UIImageView = {
+    // MARK: - UI Elements
+    private lazy var imgHero: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray5
+        imageView.layer.cornerRadius = 8
         return imageView
     }()
     
-    private let nameLabel: UILabel = {
+    private lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
-        label.numberOfLines = 2
+        label.shadowColor = UIColor.black.withAlphaComponent(0.7)
+        label.shadowOffset = CGSize(width: 1, height: 1)
         return label
-    }()
-    
-    private let favoriteImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .systemYellow
-        imageView.image = UIImage(systemName: "star.fill")
-        return imageView
     }()
     
     // MARK: - Initialization
@@ -57,63 +43,64 @@ class HeroCell: UICollectionViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
+        setupUI()
     }
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        imageView.image = nil
-        nameLabel.text = nil
-        favoriteImageView.isHidden = true
-    }
-    
-    // MARK: - Setup
+    // MARK: - UI Setup
     private func setupUI() {
-        contentView.addSubview(containerView)
-        containerView.addSubview(imageView)
-        containerView.addSubview(nameLabel)
-        containerView.addSubview(favoriteImageView)
+        // Cell styling
+        contentView.backgroundColor = .systemBackground
         
+        // Add subviews
+        contentView.addSubview(imgHero)
+        imgHero.addSubview(nameLabel) // Add the label on top of the image
+        
+        // Set constraints
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            // Image view fills the cell with small margins
+            imgHero.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            imgHero.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 4),
+            imgHero.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
+            imgHero.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
             
-            imageView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            imageView.heightAnchor.constraint(equalTo: containerView.heightAnchor, multiplier: 0.7),
-            
-            nameLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
-            nameLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
-            nameLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            nameLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
-            
-            favoriteImageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
-            favoriteImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            favoriteImageView.widthAnchor.constraint(equalToConstant: 24),
-            favoriteImageView.heightAnchor.constraint(equalToConstant: 24)
+            // Name label at the bottom of the image
+            nameLabel.leadingAnchor.constraint(equalTo: imgHero.leadingAnchor),
+            nameLabel.trailingAnchor.constraint(equalTo: imgHero.trailingAnchor),
+            nameLabel.bottomAnchor.constraint(equalTo: imgHero.bottomAnchor, constant: -8)
         ])
     }
     
     // MARK: - Configuration
     func configure(with hero: Hero) {
-        nameLabel.text = hero.name ?? "Unknown Hero"
+        // Set name
+        nameLabel.text = hero.name
         
-        // Set a placeholder image
-        imageView.image = UIImage(systemName: "person.fill")
+        // Reset image
+        imgHero.image = nil
+        let placeholder = UIImage(named: "hero_placeholder") ?? UIImage(systemName: "person.fill")
+        imgHero.backgroundColor = .systemGray5 // Placeholder background
         
-        // Use Kingfisher to load the image from the URL
+        // Use Kingfisher to load and cache the image
         if let photoURLString = hero.photo, let photoURL = URL(string: photoURLString) {
-            imageView.kf.setImage(
+            imgHero.kf.setImage(
                 with: photoURL,
-                placeholder: UIImage(systemName: "person.fill"),
+                placeholder: placeholder,
                 options: [
                     .transition(.fade(0.2)),
                     .cacheOriginalImage
                 ]
             )
+        } else {
+            imgHero.image = placeholder
         }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Cancel any ongoing downloads when cell is reused
+        imgHero.kf.cancelDownloadTask()
+        imgHero.image = nil
+        nameLabel.text = nil
     }
 }

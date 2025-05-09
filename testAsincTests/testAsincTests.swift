@@ -9,6 +9,7 @@ import XCTest
 import Combine
 @testable import testAsinc
 
+
 class testAsincTests: XCTestCase {
     
     var cancellables: Set<AnyCancellable>!
@@ -21,7 +22,7 @@ class testAsincTests: XCTestCase {
         cancellables = nil
     }
     
-    // MARK: - LoginViewModel Tests (if you have LoginViewModel)
+    // MARK: - LoginViewModel Tests
     
     func testLoginViewModel_validCredentials() {
         // Given
@@ -73,7 +74,7 @@ class testAsincTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
     
-    // MARK: - HeroesViewModel Tests (adjust based on your existing implementation)
+    // MARK: - HeroesViewModel Tests
     
     func testHeroesViewModel_loadHeroes() {
         // Given
@@ -191,6 +192,66 @@ class testAsincTests: XCTestCase {
         let transformationVC = TransformationDetailViewController(transformation: transformation)
         XCTAssertNotNil(transformationVC)
     }
+    
+    // MARK: - UI Tests
+    
+    func testHeroCell_initialization() {
+        // Given
+        let cell = HeroCell(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        
+        // Then
+        XCTAssertNotNil(cell)
+    }
+    
+    func testTransformationCell_initialization() {
+        // Given/When
+        let cell = TransformationCell(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        
+        // Then
+        XCTAssertNotNil(cell)
+    }
+    
+    func testHeroesViewController_initialization() {
+        // Given/When
+        let viewController = HeroesViewController()
+        
+        // Then
+        XCTAssertNotNil(viewController)
+        XCTAssertNotNil(viewController.view)
+    }
+    
+    func testLoginViewController_initialization() {
+        // Given/When
+        let viewController = LoginViewController()
+        
+        // Then
+        XCTAssertNotNil(viewController)
+        XCTAssertNotNil(viewController.view)
+    }
+    
+    func testHeroDetailViewController_initialization() {
+        // Given
+        let hero = Hero(id: "1", favorite: false, name: "Goku", description: "Test", photo: nil)
+        let viewModel = HeroDetailViewModel(hero: hero)
+        
+        // When
+        let viewController = HeroDetailViewController(viewModel: viewModel)
+        
+        // Then
+        XCTAssertNotNil(viewController)
+        XCTAssertNotNil(viewController.view)
+    }
+    
+    func testString_localization() {
+        // Given
+        let key = "common.ok"
+        
+        // When
+        let localized = key.localized
+        
+        // Then
+        XCTAssertNotEqual(localized, key, "Localization should return a different string than the key")
+    }
 }
 
 // MARK: - Mock Classes
@@ -208,8 +269,8 @@ class MockLoginService: LoginServiceProtocol {
 class MockHeroRepository: HeroRepositoryProtocol {
     func getHeroes() -> AnyPublisher<[Hero], Error> {
         let heroes = [
-            Hero(id: "1", favorite: false, name: "Goku", description: "Saiyan warrior", photo: nil),
-            Hero(id: "2", favorite: true, name: "Vegeta", description: "Prince of Saiyans", photo: nil)
+            Hero(id: "1", favorite: true, name: "Goku", description: "Saiyan warrior", photo: nil),
+            Hero(id: "2", favorite: false, name: "Vegeta", description: "Prince of Saiyans", photo: nil)
         ]
         return Just(heroes)
             .setFailureType(to: Error.self)
@@ -230,6 +291,10 @@ class MockAuthRepository: AuthRepositoryProtocol {
     var logoutCalled = false
     
     func login(email: String, password: String) -> AnyPublisher<Void, Error> {
+        if email.isEmpty {
+            return Fail(error: NSError(domain: "TestError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Email cannot be empty"])).eraseToAnyPublisher()
+        }
+        
         return Just(())
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
@@ -241,6 +306,24 @@ class MockAuthRepository: AuthRepositoryProtocol {
     
     var isLoggedInPublisher: AnyPublisher<Bool, Never> {
         return Just(true).eraseToAnyPublisher()
+    }
+}
+
+class MockHeroDetailService: HeroDetailServiceProtocol {
+    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {
+        let transformations = [
+            Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
+        ]
+        completion(.success(transformations))
+    }
+}
+
+class MockApiProvider: ApiProvider {
+    override func getTransformations(forHeroId heroId: String, completion: @escaping (Result<[ApiTransformation], Error>) -> Void) {
+        let apiTransformations = [
+            ApiTransformation(id: "1", name: "Super Saiyan", description: "Test", photo: nil, hero: ApiTransformation.ApiHeroReference(id: heroId))
+        ]
+        completion(.success(apiTransformations))
     }
 }
 
@@ -264,23 +347,5 @@ class MockSecureDataService: SecureDataServiceProtocol {
     
     var tokenPublisher: AnyPublisher<String?, Never> {
         return tokenSubject.eraseToAnyPublisher()
-    }
-}
-
-class MockHeroDetailService: HeroDetailServiceProtocol {
-    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {
-        let transformations = [
-            Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
-        ]
-        completion(.success(transformations))
-    }
-}
-
-class MockApiProvider: ApiProvider {
-    override func getTransformations(forHeroId heroId: String, completion: @escaping (Result<[ApiTransformation], Error>) -> Void) {
-        let apiTransformations = [
-            ApiTransformation(id: "1", name: "Super Saiyan", description: "Test", photo: nil, hero: ApiTransformation.ApiHeroReference(id: heroId))
-        ]
-        completion(.success(apiTransformations))
     }
 }
