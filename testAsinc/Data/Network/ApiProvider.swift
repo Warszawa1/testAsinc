@@ -10,6 +10,8 @@ import Foundation
 class ApiProvider {
     private let baseURL = "https://dragonball.keepcoding.education"
     private let secureDataService: SecureDataService
+    var session: URLSession = .shared
+    
     
     init(secureDataService: SecureDataService = SecureDataService.shared) {
         self.secureDataService = secureDataService

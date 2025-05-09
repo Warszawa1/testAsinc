@@ -95,20 +95,34 @@ class LoginViewControllerTests: XCTestCase {
     
     func testLoginViewController_hasRequiredUIElements() {
         // Given
-        let mockLoginService = MockLoginService()
-        let sut = LoginViewController(loginService: mockLoginService)
+        let sut = LoginViewController(loginService: MockLoginService())
         
         // When
         sut.loadViewIfNeeded()
         
         // Then - Check that UI elements exist
-        let logoImageView = sut.view.subviews.first { $0 is UIScrollView }?.subviews.first { $0 is UIView }?.subviews.first { $0 is UIImageView }
+        // Find the scroll view first
+        guard let scrollView = sut.view.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView else {
+            XCTFail("Should find a UIScrollView")
+            return
+        }
+        
+        // Now find the content view - avoid using "is UIView" since all subviews are UIView instances
+        // Instead, look for a specific characteristic of your content view if possible
+        // For example, if your content view is the first subview, or has a specific tag
+        guard let contentView = scrollView.subviews.first else {
+            XCTFail("ScrollView should have a content view")
+            return
+        }
+        
+        // Now find the UI elements within the content view
+        let logoImageView = contentView.subviews.first(where: { $0 is UIImageView })
         XCTAssertNotNil(logoImageView, "Logo image view should exist")
         
-        let textFields = sut.view.subviews.first { $0 is UIScrollView }?.subviews.first { $0 is UIView }?.subviews.compactMap { $0 as? UITextField }
-        XCTAssertEqual(textFields?.count, 2, "Should have username and password text fields")
+        let textFields = contentView.subviews.compactMap { $0 as? UITextField }
+        XCTAssertEqual(textFields.count, 2, "Should have username and password text fields")
         
-        let loginButton = sut.view.subviews.first { $0 is UIScrollView }?.subviews.first { $0 is UIView }?.subviews.first { $0 is UIButton }
+        let loginButton = contentView.subviews.first(where: { $0 is UIButton })
         XCTAssertNotNil(loginButton, "Login button should exist")
     }
 }
@@ -187,8 +201,9 @@ class HeroDetailViewControllerTests: XCTestCase {
         XCTAssertNotNil(scrollView, "Scroll view should exist")
         
         // Find the content view inside the scroll view
-        let contentView = scrollView?.subviews.first { $0 is UIView && $0 != scrollView }
+        let contentView = scrollView?.subviews.first
         XCTAssertNotNil(contentView, "Content view should exist inside scroll view")
+
         
         // Find the hero image view
         let heroImageView = contentView?.subviews.first { $0 is UIImageView }

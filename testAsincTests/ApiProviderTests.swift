@@ -19,10 +19,8 @@ class ApiProviderTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
         let session = URLSession(configuration: configuration)
-        
-        // Since ApiProvider doesn't accept a custom URLSession in its initializer,
-        // we'll use standard initialization and override the URLSession at the request level
         sut = ApiProvider(secureDataService: SecureDataService.shared)
+        sut.session = session
     }
 
     override func tearDownWithError() throws {
@@ -61,26 +59,35 @@ class ApiProviderTests: XCTestCase {
     
     func test_getHeroes_serviceError() throws {
         // Given
-        MockURLProtocol.error = NSError(domain: "io.keepcoding", code: 503)
-        var error: Error?
+        // Configure MockURLProtocol to handle requests
+        MockURLProtocol.requestHandler = { request in
+            throw NSError(domain: "io.keepcoding", code: 503)
+        }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        sut = ApiProvider(secureDataService: SecureDataService.shared)
+        sut.session = session
         
-        // When
+        // Set token before making API call
         setToken()
+        
+        var error: Error?
         let expectation = expectation(description: "Error from server")
         
-        // This is the key fix - ensure the token is set BEFORE making the API call
+        // When
         sut.getHeroes { result in
             switch result {
             case .success(_):
                 XCTFail("expected error")
             case .failure(let errorServer):
                 error = errorServer
-                expectation.fulfill() // Make sure this gets called
+                expectation.fulfill()
             }
         }
         
         // Then
-        wait(for: [expectation], timeout: 3.0) // Increased timeout significantly
+        wait(for: [expectation], timeout: 3.0)
         XCTAssertNotNil(error)
     }
     

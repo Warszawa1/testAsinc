@@ -13,11 +13,18 @@ import Combine
 class MockLoginService: LoginServiceProtocol {
     func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
         // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if email == "test@test.com" && password == "password" {
-                completion(.success("mock-token"))
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // Reduced delay for tests
+            // Accept both test credentials
+            if (email == "test@example.com" || email == "test@test.com") && password == "password" {
+                let mockToken = "mock-token-12345"
+                SecureDataService.shared.setToken(mockToken)
+                completion(.success(mockToken))
             } else {
-                completion(.failure(NSError(domain: "MockError", code: 401, userInfo: [NSLocalizedDescriptionKey: "Invalid credentials"])))
+                completion(.failure(NSError(
+                    domain: "MockLoginService",
+                    code: 401,
+                    userInfo: [NSLocalizedDescriptionKey: "Invalid credentials"]
+                )))
             }
         }
     }
@@ -41,6 +48,7 @@ class MockHeroesService: HeroesServiceProtocol {
         }
     }
 }
+
 
 class MockHeroDetailService: HeroDetailServiceProtocol {
     func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {

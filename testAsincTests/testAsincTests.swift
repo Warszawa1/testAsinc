@@ -25,7 +25,6 @@ class testAsincTests: XCTestCase {
     
     func testLoginViewModel_validCredentials() {
         // Given
-        let mockService = MockLoginService()
         let viewModel = LoginViewModel(authRepository: MockAuthRepository())
         let expectation = XCTestExpectation(description: "Login successful")
         
@@ -48,7 +47,6 @@ class testAsincTests: XCTestCase {
     
     func testLoginViewModel_emptyEmail() {
         // Given
-        let mockService = MockLoginService()
         let viewModel = LoginViewModel(authRepository: MockAuthRepository())
         
         viewModel.email = ""
@@ -201,94 +199,4 @@ class testAsincTests: XCTestCase {
     }
 }
 
-//// MARK: - Mock Classes
-//
-//class MockLoginService: LoginServiceProtocol {
-//    func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
-//        if email == "test@test.com" && password == "password" {
-//            completion(.success("mock-token"))
-//        } else {
-//            completion(.failure(NSError(domain: "MockError", code: 401, userInfo: nil)))
-//        }
-//    }
-//}
-//
-//class MockHeroRepository: HeroRepositoryProtocol {
-//    func getHeroes() -> AnyPublisher<[Hero], Error> {
-//        let heroes = [
-//            Hero(id: "1", favorite: false, name: "Goku", description: "Saiyan warrior", photo: nil),
-//            Hero(id: "2", favorite: true, name: "Vegeta", description: "Prince of Saiyans", photo: nil)
-//        ]
-//        return Just(heroes)
-//            .setFailureType(to: Error.self)
-//            .eraseToAnyPublisher()
-//    }
-//    
-//    func getHeroTransformations(heroId: String) -> AnyPublisher<[Transformation], Error> {
-//        let transformations = [
-//            Transformation(id: "1", name: "Super Saiyan", description: "First transformation", photo: nil)
-//        ]
-//        return Just(transformations)
-//            .setFailureType(to: Error.self)
-//            .eraseToAnyPublisher()
-//    }
-//}
-//
-//class MockAuthRepository: AuthRepositoryProtocol {
-//    var logoutCalled = false
-//    
-//    func login(email: String, password: String) -> AnyPublisher<Void, Error> {
-//        return Just(())
-//            .setFailureType(to: Error.self)
-//            .eraseToAnyPublisher()
-//    }
-//    
-//    func logout() {
-//        logoutCalled = true
-//    }
-//    
-//    var isLoggedInPublisher: AnyPublisher<Bool, Never> {
-//        return Just(true).eraseToAnyPublisher()
-//    }
-//}
-//
-//class MockSecureDataService: SecureDataServiceProtocol {
-//    private var token: String?
-//    private let tokenSubject = CurrentValueSubject<String?, Never>(nil)
-//    
-//    func getToken() -> String? {
-//        return token
-//    }
-//    
-//    func setToken(_ token: String) {
-//        self.token = token
-//        tokenSubject.send(token)
-//    }
-//    
-//    func clearToken() {
-//        self.token = nil
-//        tokenSubject.send(nil)
-//    }
-//    
-//    var tokenPublisher: AnyPublisher<String?, Never> {
-//        return tokenSubject.eraseToAnyPublisher()
-//    }
-//}
-//
-//class MockHeroDetailService: HeroDetailServiceProtocol {
-//    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {
-//        let transformations = [
-//            Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
-//        ]
-//        completion(.success(transformations))
-//    }
-//}
-//
-//class MockApiProvider: ApiProvider {
-//    override func getTransformations(forHeroId heroId: String, completion: @escaping (Result<[ApiTransformation], Error>) -> Void) {
-//        let apiTransformations = [
-//            ApiTransformation(id: "1", name: "Super Saiyan", description: "Test", photo: nil, hero: ApiTransformation.ApiHeroReference(id: heroId))
-//        ]
-//        completion(.success(apiTransformations))
-//    }
-//}
+
