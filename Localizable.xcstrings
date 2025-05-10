@@ -222,6 +222,23 @@
         }
       }
     },
+    "login.error.emptyFields" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please fill in all fields"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por favor, rellena email y contraseña"
+          }
+        }
+      }
+    },
     "login.error.emptyPassword" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -235,6 +252,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Por favor, introduce tu contraseña"
+          }
+        }
+      }
+    },
+    "login.error.invalidCredentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid email or passwork"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email o contaseña no valido"
           }
         }
       }

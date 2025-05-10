@@ -83,19 +83,6 @@ class LoginViewController: UIViewController {
                 self?.updateUI(with: state)
             }
             .store(in: &cancellables)
-        
-        // Enable/disable login button based on input validation
-        Publishers.CombineLatest(
-            viewModel.$email,
-            viewModel.$password
-        )
-        .map { email, password in
-            !email.isEmpty && !password.isEmpty
-        }
-        .removeDuplicates()
-        .receive(on: RunLoop.main)
-        .assign(to: \.isEnabled, on: loginButton)
-        .store(in: &cancellables)
     }
     
     // MARK: - UI Updates
@@ -110,10 +97,15 @@ class LoginViewController: UIViewController {
             navigateToHeroesList()
         case .error(let message):
             showLoading(false)
-            showError(message: message)
+            // First show the visual feedback
             showLoginError()
+            // Then show the alert with a small delay to avoid conflicts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.showError(message: message)
+            }
         }
     }
+
     
     // MARK: - UI Setup
     private func setupUI() {
@@ -267,8 +259,18 @@ class LoginViewController: UIViewController {
     }
     
     private func showError(message: String) {
-        let alert = UIAlertController(title: "Error de Login", message: message, preferredStyle: .alert)
+        // Show the shake animation first
+        showLoginError()
+        
+        // Then show the alert
+        let alert = UIAlertController(
+            title: "Error de Login",
+            message: message,
+            preferredStyle: .alert
+        )
+        
         alert.addAction(UIAlertAction(title: "OK", style: .default))
+        
         present(alert, animated: true)
     }
     

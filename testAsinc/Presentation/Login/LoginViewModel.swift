@@ -34,7 +34,6 @@ class LoginViewModel {
         setupBindings()
     }
     
-    // MARK: - Setup
     private func setupBindings() {
         loginTrigger
             .flatMap { [weak self] _ -> AnyPublisher<LoginState, Never> in
@@ -42,13 +41,13 @@ class LoginViewModel {
                     return Just(.error(message: "Internal error")).eraseToAnyPublisher()
                 }
                 
-                // Validate inputs
-                guard !self.email.isEmpty else {
-                    return Just(.error(message: "login.error.emptyEmail".localized)).eraseToAnyPublisher()
-                }
-                
-                guard !self.password.isEmpty else {
-                    return Just(.error(message: "login.error.emptyPassword".localized)).eraseToAnyPublisher()
+                // Simple validation for empty fields
+                if self.email.isEmpty && self.password.isEmpty {
+                    return Just(.error(message: "Por favor, completa todos los campos")).eraseToAnyPublisher()
+                } else if self.email.isEmpty {
+                    return Just(.error(message: "Por favor, introduce tu email")).eraseToAnyPublisher()
+                } else if self.password.isEmpty {
+                    return Just(.error(message: "Por favor, introduce tu contraseña")).eraseToAnyPublisher()
                 }
                 
                 // Create a future that handles the async login
@@ -58,7 +57,8 @@ class LoginViewModel {
                             try await self.authRepository.login(email: self.email, password: self.password)
                             promise(.success(.success))
                         } catch {
-                            promise(.success(.error(message: error.localizedDescription)))
+                            // Simply show wrong credentials for any login error
+                            promise(.success(.error(message: "Usuario o contraseña incorrectos")))
                         }
                     }
                 }
@@ -69,4 +69,5 @@ class LoginViewModel {
             .assign(to: \.state, on: self)
             .store(in: &cancellables)
     }
+
 }

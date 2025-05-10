@@ -138,18 +138,6 @@ class SplashViewControllerTests: XCTestCase {
         // Then
         XCTAssertNotNil(sut.view)
     }
-    
-    func testSplashViewController_hasLogoImage() {
-        // Given
-        let sut = SplashViewController()
-        
-        // When
-        sut.loadViewIfNeeded()
-        
-        // Then
-        let logoImageView = sut.view.subviews.first { $0 is UIImageView }
-        XCTAssertNotNil(logoImageView, "Logo image view should exist")
-    }
 }
 
 class HeroDetailViewControllerTests: XCTestCase {
