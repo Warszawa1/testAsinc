@@ -22,10 +22,12 @@ class SplashViewModel {
     func checkAuthenticationStatus() {
         // Add a small delay for splash screen effect
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self = self else { return }
+            
             if SecureDataService.shared.getToken() != nil {
-                self?.shouldNavigateToHeroes = true
+                self.shouldNavigateToHeroes = true
             } else {
-                self?.shouldNavigateToLogin = true
+                self.shouldNavigateToLogin = true
             }
         }
     }

@@ -4,13 +4,12 @@
 //
 //  Created by Ire  Av on 8/5/25.
 //
-
 import Foundation
 import Combine
 
 protocol HeroRepositoryProtocol {
-    func getHeroes() -> AnyPublisher<[Hero], Error>
-    func getHeroTransformations(heroId: String) -> AnyPublisher<[Transformation], Error>
+    func getHeroes() async throws -> [Hero]
+    func getHeroTransformations(heroId: String) async throws -> [Transformation]
 }
 
 final class HeroRepository: HeroRepositoryProtocol {
@@ -23,19 +22,11 @@ final class HeroRepository: HeroRepositoryProtocol {
         self.heroDetailService = heroDetailService
     }
     
-    func getHeroes() -> AnyPublisher<[Hero], Error> {
-        return Future<[Hero], Error> { promise in
-            self.heroesService.getHeroes { result in
-                promise(result)
-            }
-        }.eraseToAnyPublisher()
+    func getHeroes() async throws -> [Hero] {
+        return try await heroesService.getHeroes()
     }
     
-    func getHeroTransformations(heroId: String) -> AnyPublisher<[Transformation], Error> {
-        return Future<[Transformation], Error> { promise in
-            self.heroDetailService.getHeroTransformations(heroId: heroId) { result in
-                promise(result)
-            }
-        }.eraseToAnyPublisher()
+    func getHeroTransformations(heroId: String) async throws -> [Transformation] {
+        return try await heroDetailService.getHeroTransformations(heroId: heroId)
     }
 }

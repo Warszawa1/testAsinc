@@ -49,10 +49,16 @@ class HeroesViewModel {
                     return Just(.failure(AppError.noData)).eraseToAnyPublisher()
                 }
                 
-                return self.heroRepository.getHeroes()
-                    .map { Result.success($0) }
-                    .catch { error in Just(.failure(error)) }
-                    .eraseToAnyPublisher()
+                return Future<Result<[Hero], Error>, Never> { promise in
+                    Task {
+                        do {
+                            let heroes = try await self.heroRepository.getHeroes()
+                            promise(.success(.success(heroes)))
+                        } catch {
+                            promise(.success(.failure(error)))
+                        }
+                    }
+                }.eraseToAnyPublisher()
             }
             .receive(on: RunLoop.main)
             .sink { [weak self] result in

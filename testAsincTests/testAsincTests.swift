@@ -121,25 +121,16 @@ class testAsincTests: XCTestCase {
     
     // MARK: - HeroDetailService Tests
     
-    func testHeroDetailService_fetchTransformations() {
+    func testHeroDetailService_fetchTransformations() async throws {
         // Given
         let service = HeroDetailService(apiProvider: MockApiProvider())
-        let expectation = XCTestExpectation(description: "Transformations fetched")
         let heroId = "test-hero-id"
         
         // When
-        service.getHeroTransformations(heroId: heroId) { result in
-            // Then
-            switch result {
-            case .success(let transformations):
-                XCTAssertFalse(transformations.isEmpty)
-                expectation.fulfill()
-            case .failure:
-                XCTFail("Should not fail")
-            }
-        }
+        let transformations = try await service.getHeroTransformations(heroId: heroId)
         
-        wait(for: [expectation], timeout: 1.0)
+        // Then
+        XCTAssertFalse(transformations.isEmpty)
     }
     
     // MARK: - Model Tests

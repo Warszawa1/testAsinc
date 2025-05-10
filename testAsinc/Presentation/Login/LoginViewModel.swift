@@ -5,7 +5,6 @@
 //  Created by Ire  Av on 8/5/25.
 //
 
-
 import Foundation
 import Combine
 
@@ -52,15 +51,19 @@ class LoginViewModel {
                     return Just(.error(message: "login.error.emptyPassword".localized)).eraseToAnyPublisher()
                 }
                 
-                return Just(.loading)
-                    .append(
-                        self.authRepository.login(email: self.email, password: self.password)
-                            .map { _ in LoginState.success }
-                            .catch { error in
-                                return Just(.error(message: error.localizedDescription))
-                            }
-                    )
-                    .eraseToAnyPublisher()
+                // Create a future that handles the async login
+                return Future<LoginState, Never> { promise in
+                    Task {
+                        do {
+                            try await self.authRepository.login(email: self.email, password: self.password)
+                            promise(.success(.success))
+                        } catch {
+                            promise(.success(.error(message: error.localizedDescription)))
+                        }
+                    }
+                }
+                .prepend(.loading)
+                .eraseToAnyPublisher()
             }
             .receive(on: RunLoop.main)
             .assign(to: \.state, on: self)

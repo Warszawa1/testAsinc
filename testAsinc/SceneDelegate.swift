@@ -6,7 +6,6 @@
 //
 import UIKit
 
-import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -16,12 +15,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         window = UIWindow(windowScene: windowScene)
+        window?.backgroundColor = .systemBackground
         
         // Start with the splash screen (it will check authentication)
         let splashVC = SplashViewController()
         
         // Wrap it in a navigation controller
         let navigationController = UINavigationController(rootViewController: splashVC)
+        navigationController.view.backgroundColor = .systemBackground
         
         // Set as root and make visible
         window?.rootViewController = navigationController

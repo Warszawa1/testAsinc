@@ -5,9 +5,9 @@
 //  Created by Ire  Av on 8/5/25.
 //
 
-// HeroesViewController.swift
 
 import UIKit
+import Combine
 
 enum HeroesSections {
     case main
@@ -29,11 +29,12 @@ class HeroesViewController: UIViewController {
     
     private var heroes: [Hero] = []
     private var datasource: Datasource?
-    private let heroesService: HeroesServiceProtocol
+    private let viewModel: HeroesViewModel
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
-    init(heroesService: HeroesServiceProtocol = HeroesService()) {
-        self.heroesService = heroesService
+    init(viewModel: HeroesViewModel = HeroesViewModel()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -47,7 +48,30 @@ class HeroesViewController: UIViewController {
         setupUI()
         setupNavigationBar()
         configureCollectionView()
+        setupBindings()
         loadHeroes()
+    }
+    
+    private func setupBindings() {
+        viewModel.$heroes
+            .receive(on: RunLoop.main)
+            .sink { [weak self] heroes in
+                self?.heroes = heroes
+                self?.updateDataSource()
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] state in
+                switch state {
+                case .error(let message):
+                    self?.showErrorAlert(message: message)
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
     }
     
     override func viewDidLayoutSubviews() {
@@ -140,19 +164,7 @@ class HeroesViewController: UIViewController {
     
     // MARK: - Data Loading
     private func loadHeroes() {
-        // Show loading indicator if needed
-        
-        heroesService.getHeroes { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let heroes):
-                    self?.heroes = heroes
-                    self?.updateDataSource()
-                case .failure(let error):
-                    self?.showErrorAlert(message: error.localizedDescription)
-                }
-            }
-        }
+        viewModel.loadHeroes()
     }
     
     private func updateDataSource() {

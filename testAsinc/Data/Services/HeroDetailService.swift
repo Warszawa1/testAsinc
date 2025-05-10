@@ -8,7 +8,7 @@
 import Foundation
 
 protocol HeroDetailServiceProtocol {
-    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void)
+    func getHeroTransformations(heroId: String) async throws -> [Transformation]
 }
 
 class HeroDetailService: HeroDetailServiceProtocol {
@@ -18,22 +18,18 @@ class HeroDetailService: HeroDetailServiceProtocol {
         self.apiProvider = apiProvider
     }
     
-    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {
-        apiProvider.getTransformations(forHeroId: heroId) { result in
-            switch result {
-            case .success(let apiTransformations):
-                let transformations = apiTransformations.map { apiTransformation in
-                    Transformation(
-                        id: apiTransformation.id,
-                        name: apiTransformation.name,
-                        description: apiTransformation.description,
-                        photo: apiTransformation.photo
-                    )
-                }
-                completion(.success(transformations))
-            case .failure(let error):
-                completion(.failure(error))
-            }
+    func getHeroTransformations(heroId: String) async throws -> [Transformation] {
+        let apiTransformations = try await apiProvider.getTransformations(forHeroId: heroId)
+        
+        let transformations = apiTransformations.map { apiTransformation in
+            Transformation(
+                id: apiTransformation.id,
+                name: apiTransformation.name,
+                description: apiTransformation.description,
+                photo: apiTransformation.photo
+            )
         }
+        
+        return transformations
     }
 }

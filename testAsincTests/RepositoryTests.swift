@@ -25,46 +25,33 @@ class RepositoryTests: XCTestCase {
     
     // MARK: - AuthRepository
     
-    func testAuthRepository_login() {
+    func testAuthRepository_login() async throws {
         // Given
         let mockLoginService = MockLoginService()
         let mockSecureDataService = MockSecureDataService()
         let repository = AuthRepository(loginService: mockLoginService, secureDataService: mockSecureDataService)
-        let expectation = XCTestExpectation(description: "Login successful")
         
         // When
-        repository.login(email: "test@test.com", password: "password")
-            .sink(receiveCompletion: { completion in
-                if case .failure = completion {
-                    XCTFail("Login should succeed")
-                }
-            }, receiveValue: { _ in
-                expectation.fulfill()
-            })
-            .store(in: &cancellables)
+        try await repository.login(email: "test@test.com", password: "password")
         
-        wait(for: [expectation], timeout: 1.0)
+        // Then - if we reach here without throwing, login succeeded
     }
+
     
-    func testAuthRepository_loginFailure() {
+    func testAuthRepository_loginFailure() async throws {
         // Given
         let mockLoginService = MockLoginService()
         let mockSecureDataService = MockSecureDataService()
         let repository = AuthRepository(loginService: mockLoginService, secureDataService: mockSecureDataService)
-        let expectation = XCTestExpectation(description: "Login failed")
         
-        // When
-        repository.login(email: "wrong@email.com", password: "wrong")
-            .sink(receiveCompletion: { completion in
-                if case .failure = completion {
-                    expectation.fulfill()
-                }
-            }, receiveValue: { _ in
-                XCTFail("Login should fail")
-            })
-            .store(in: &cancellables)
-        
-        wait(for: [expectation], timeout: 1.0)
+        // When/Then
+        do {
+            try await repository.login(email: "wrong@email.com", password: "wrong")
+            XCTFail("Login should fail")
+        } catch {
+            // Expected error
+            XCTAssertNotNil(error)
+        }
     }
     
     func testAuthRepository_logout() {
@@ -87,47 +74,29 @@ class RepositoryTests: XCTestCase {
     
     // MARK: - HeroRepository
     
-    func testHeroRepository_getHeroes() {
+    func testHeroRepository_getHeroes() async throws {
         // Given
         let mockHeroesService = MockHeroesService()
         let repository = HeroRepository(heroesService: mockHeroesService)
-        let expectation = XCTestExpectation(description: "Heroes fetched")
         
         // When
-        repository.getHeroes()
-            .sink(receiveCompletion: { completion in
-                if case .failure = completion {
-                    XCTFail("Should not fail")
-                }
-            }, receiveValue: { heroes in
-                XCTAssertFalse(heroes.isEmpty)
-                XCTAssertEqual(heroes.count, 6)
-                expectation.fulfill()
-            })
-            .store(in: &cancellables)
+        let heroes = try await repository.getHeroes()
         
-        wait(for: [expectation], timeout: 2.0)
+        // Then
+        XCTAssertFalse(heroes.isEmpty)
+        XCTAssertEqual(heroes.count, 6)
     }
     
-    func testHeroRepository_getHeroTransformations() {
+    func testHeroRepository_getHeroTransformations() async throws {
         // Given
         let mockHeroDetailService = MockHeroDetailService()
         let repository = HeroRepository(heroDetailService: mockHeroDetailService)
-        let expectation = XCTestExpectation(description: "Transformations fetched")
         
         // When
-        repository.getHeroTransformations(heroId: "1")
-            .sink(receiveCompletion: { completion in
-                if case .failure = completion {
-                    XCTFail("Should not fail")
-                }
-            }, receiveValue: { transformations in
-                XCTAssertFalse(transformations.isEmpty)
-                XCTAssertEqual(transformations.first?.name, "Super Saiyan")
-                expectation.fulfill()
-            })
-            .store(in: &cancellables)
+        let transformations = try await repository.getHeroTransformations(heroId: "1")
         
-        wait(for: [expectation], timeout: 1.0)
+        // Then
+        XCTAssertFalse(transformations.isEmpty)
+        XCTAssertEqual(transformations.first?.name, "Super Saiyan")
     }
 }

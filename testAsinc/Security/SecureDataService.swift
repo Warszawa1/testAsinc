@@ -34,10 +34,7 @@ final class SecureDataService: SecureDataServiceProtocol {
     
     // Initialization
     private init() {
-        print("SecureDataService: initializing")
-        // Initialize with current token
         let token = keychain.get(tokenKey)
-        print("SecureDataService: token exists: \(token != nil)")
         tokenSubject.send(token)
     }
     

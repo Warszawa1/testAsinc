@@ -5,7 +5,6 @@
 //  Created by Ire  Av on 8/5/25.
 //
 
-
 import Foundation
 import Combine
 
@@ -37,13 +36,13 @@ class HeroDetailViewModel {
     let loadTransformationsTrigger = PassthroughSubject<Void, Never>()
     
     // MARK: - Dependencies
-    private let heroDetailService: HeroDetailServiceProtocol  // Make sure this line exists
+    private let heroDetailService: HeroDetailServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     init(hero: Hero, heroDetailService: HeroDetailServiceProtocol = HeroDetailService()) {
         self.hero = hero
-        self.heroDetailService = heroDetailService  // Make sure this line exists
+        self.heroDetailService = heroDetailService
         setupBindings()
     }
     
@@ -61,11 +60,11 @@ class HeroDetailViewModel {
                 }
                 
                 return Future<[Transformation], Error> { promise in
-                    self.heroDetailService.getHeroTransformations(heroId: self.hero.id) { result in
-                        switch result {
-                        case .success(let transformations):
+                    Task {
+                        do {
+                            let transformations = try await self.heroDetailService.getHeroTransformations(heroId: self.hero.id)
                             promise(.success(transformations))
-                        case .failure(let error):
+                        } catch {
                             promise(.failure(error))
                         }
                     }

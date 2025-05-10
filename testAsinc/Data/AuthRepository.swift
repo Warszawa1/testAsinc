@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 protocol AuthRepositoryProtocol {
-    func login(email: String, password: String) -> AnyPublisher<Void, Error>
+    func login(email: String, password: String) async throws
     func logout()
     var isLoggedInPublisher: AnyPublisher<Bool, Never> { get }
 }
@@ -25,17 +25,8 @@ final class AuthRepository: AuthRepositoryProtocol {
         self.secureDataService = secureDataService
     }
     
-    func login(email: String, password: String) -> AnyPublisher<Void, Error> {
-        return Future<Void, Error> { promise in
-            self.loginService.login(email: email, password: password) { result in
-                switch result {
-                case .success:
-                    promise(.success(()))
-                case .failure(let error):
-                    promise(.failure(error))
-                }
-            }
-        }.eraseToAnyPublisher()
+    func login(email: String, password: String) async throws {
+        _ = try await loginService.login(email: email, password: password)
     }
     
     func logout() {

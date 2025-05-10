@@ -12,26 +12,23 @@ class ApiProvider {
     private let secureDataService: SecureDataService
     var session: URLSession = .shared
     
-    
     init(secureDataService: SecureDataService = SecureDataService.shared) {
         self.secureDataService = secureDataService
     }
     
     // Login functionality
-    func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
+    func login(email: String, password: String) async throws -> String {
         // Create login string for Basic auth
         let loginString = String(format: "%@:%@", email, password)
         guard let loginData = loginString.data(using: .utf8) else {
-            completion(.failure(NetworkError.invalidData))
-            return
+            throw NetworkError.invalidData
         }
         
         let base64LoginString = loginData.base64EncodedString()
         
         // Create request
         guard let url = URL(string: "\(baseURL)/api/auth/login") else {
-            completion(.failure(NetworkError.invalidURL))
-            return
+            throw NetworkError.invalidURL
         }
         
         var request = URLRequest(url: url)
@@ -39,52 +36,44 @@ class ApiProvider {
         request.setValue("Basic \(base64LoginString)", forHTTPHeaderField: "Authorization")
         
         // Execute request
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200...299:
+            guard let token = String(data: data, encoding: .utf8) else {
+                throw NetworkError.invalidData
             }
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(NetworkError.invalidResponse))
-                return
-            }
-            
-            switch httpResponse.statusCode {
-            case 200...299:
-                if let data = data, let token = String(data: data, encoding: .utf8) {
-                    completion(.success(token))
-                } else {
-                    completion(.failure(NetworkError.invalidData))
-                }
-            case 401:
-                completion(.failure(NetworkError.unauthorized))
-            default:
-                completion(.failure(NetworkError.serverError(httpResponse.statusCode)))
-            }
-        }.resume()
+            return token
+        case 401:
+            throw NetworkError.unauthorized
+        default:
+            throw NetworkError.serverError(httpResponse.statusCode)
+        }
     }
     
     // Get heroes
-    func getHeroes(completion: @escaping (Result<[ApiHero], Error>) -> Void) {
-        performRequest(endpoint: .heroes, body: ["name": ""], completion: completion)
+    func getHeroes() async throws -> [ApiHero] {
+        return try await performRequest(endpoint: .heroes, body: ["name": ""])
     }
     
     // Get hero locations
-    func getLocations(forHeroId heroId: String, completion: @escaping (Result<[ApiHeroLocation], Error>) -> Void) {
-        performRequest(endpoint: .heroLocations(heroId), body: ["id": heroId], completion: completion)
+    func getLocations(forHeroId heroId: String) async throws -> [ApiHeroLocation] {
+        return try await performRequest(endpoint: .heroLocations(heroId), body: ["id": heroId])
     }
     
     // Get hero transformations
-    func getTransformations(forHeroId heroId: String, completion: @escaping (Result<[ApiTransformation], Error>) -> Void) {
-        performRequest(endpoint: .heroTransformations(heroId), body: ["id": heroId], completion: completion)
+    func getTransformations(forHeroId heroId: String) async throws -> [ApiTransformation] {
+        return try await performRequest(endpoint: .heroTransformations(heroId), body: ["id": heroId])
     }
     
     // Generic request method
-    private func performRequest<T: Decodable>(endpoint: Endpoint, body: [String: Any], completion: @escaping (Result<T, Error>) -> Void) {
+    private func performRequest<T: Decodable>(endpoint: Endpoint, body: [String: Any]) async throws -> T {
         guard let url = URL(string: "\(baseURL)\(endpoint.path)") else {
-            completion(.failure(NetworkError.invalidURL))
-            return
+            throw NetworkError.invalidURL
         }
         
         var request = URLRequest(url: url)
@@ -94,49 +83,33 @@ class ApiProvider {
         // Add authentication if required
         if endpoint.requiresAuthentication {
             guard let token = secureDataService.getToken() else {
-                completion(.failure(NetworkError.unauthorized))
-                return
+                throw NetworkError.unauthorized
             }
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
         // Add body
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        } catch {
-            completion(.failure(NetworkError.invalidData))
-            return
-        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         // Execute request
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200...299:
+            do {
+                let decodedObject = try JSONDecoder().decode(T.self, from: data)
+                return decodedObject
+            } catch {
+                throw NetworkError.decodingError
             }
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(NetworkError.invalidResponse))
-                return
-            }
-            
-            switch httpResponse.statusCode {
-            case 200...299:
-                if let data = data {
-                    do {
-                        let decodedObject = try JSONDecoder().decode(T.self, from: data)
-                        completion(.success(decodedObject))
-                    } catch {
-                        completion(.failure(NetworkError.decodingError))
-                    }
-                } else {
-                    completion(.failure(NetworkError.noData))
-                }
-            case 401:
-                completion(.failure(NetworkError.unauthorized))
-            default:
-                completion(.failure(NetworkError.serverError(httpResponse.statusCode)))
-            }
-        }.resume()
+        case 401:
+            throw NetworkError.unauthorized
+        default:
+            throw NetworkError.serverError(httpResponse.statusCode)
+        }
     }
 }

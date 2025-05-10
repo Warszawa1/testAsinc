@@ -9,7 +9,7 @@
 import Foundation
 
 protocol HeroesServiceProtocol {
-    func getHeroes(completion: @escaping (Result<[Hero], Error>) -> Void)
+    func getHeroes() async throws -> [Hero]
 }
 
 class HeroesService: HeroesServiceProtocol {
@@ -19,24 +19,20 @@ class HeroesService: HeroesServiceProtocol {
         self.apiProvider = apiProvider
     }
     
-    func getHeroes(completion: @escaping (Result<[Hero], Error>) -> Void) {
-        apiProvider.getHeroes { result in
-            switch result {
-            case .success(let apiHeroes):
-                // Convert API models to domain models
-                let heroes = apiHeroes.map { apiHero in
-                    Hero(
-                        id: apiHero.id,
-                        favorite: apiHero.favorite,
-                        name: apiHero.name,
-                        description: apiHero.description,
-                        photo: apiHero.photo
-                    )
-                }
-                completion(.success(heroes))
-            case .failure(let error):
-                completion(.failure(error))
-            }
+    func getHeroes() async throws -> [Hero] {
+        let apiHeroes = try await apiProvider.getHeroes()
+        
+        // Convert API models to domain models
+        let heroes = apiHeroes.map { apiHero in
+            Hero(
+                id: apiHero.id,
+                favorite: apiHero.favorite,
+                name: apiHero.name,
+                description: apiHero.description,
+                photo: apiHero.photo
+            )
         }
+        
+        return heroes
     }
 }

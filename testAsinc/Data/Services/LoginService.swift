@@ -5,10 +5,11 @@
 //  Created by Ire  Av on 8/5/25.
 //
 
+
 import Foundation
 
 protocol LoginServiceProtocol {
-    func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void)
+    func login(email: String, password: String) async throws -> String
 }
 
 class LoginService: LoginServiceProtocol {
@@ -21,16 +22,10 @@ class LoginService: LoginServiceProtocol {
         self.secureDataService = secureDataService
     }
     
-    func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
-        apiProvider.login(email: email, password: password) { [weak self] result in
-            switch result {
-            case .success(let token):
-                // Save the token
-                self?.secureDataService.setToken(token)
-                completion(.success(token))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
+    func login(email: String, password: String) async throws -> String {
+        let token = try await apiProvider.login(email: email, password: password)
+        // Save the token
+        secureDataService.setToken(token)
+        return token
     }
 }

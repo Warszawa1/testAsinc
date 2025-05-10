@@ -5,8 +5,8 @@
 //  Created by Ire  Av on 8/5/25.
 //
 
-
 import UIKit
+import Combine
 
 class LoginViewController: UIViewController {
     
@@ -18,11 +18,12 @@ class LoginViewController: UIViewController {
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     
     // MARK: - Dependencies
-    private let loginService: LoginServiceProtocol
+    private let viewModel: LoginViewModel
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
-    init(loginService: LoginServiceProtocol = LoginService()) {
-        self.loginService = loginService
+    init(viewModel: LoginViewModel = LoginViewModel()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -35,6 +36,7 @@ class LoginViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupKeyboardHandling()
+        setupBindings()  // New method for Combine bindings
         
         // Hide back button
         navigationItem.hidesBackButton = true
@@ -46,6 +48,71 @@ class LoginViewController: UIViewController {
     
     @objc private func dismissKeyboard() {
         view.endEditing(true)
+    }
+    
+    // MARK: - Setup Bindings
+    private func setupBindings() {
+        // Bind text fields to view model
+        usernameTextField.textPublisher
+            .map { $0 ?? "" }  // Convert optional to non-optional
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: \.email, on: viewModel)
+            .store(in: &cancellables)
+        
+        passwordTextField.textPublisher
+            .map { $0 ?? "" }  // Convert optional to non-optional
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .assign(to: \.password, on: viewModel)
+            .store(in: &cancellables)
+        
+        // Bind login button tap to view model trigger
+        loginButton.tapPublisher
+            .sink { [weak self] _ in
+                self?.dismissKeyboard()
+                self?.viewModel.loginTrigger.send()
+            }
+            .store(in: &cancellables)
+        
+        // Bind view model state to UI
+        viewModel.$state
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] state in
+                self?.updateUI(with: state)
+            }
+            .store(in: &cancellables)
+        
+        // Enable/disable login button based on input validation
+        Publishers.CombineLatest(
+            viewModel.$email,
+            viewModel.$password
+        )
+        .map { email, password in
+            !email.isEmpty && !password.isEmpty
+        }
+        .removeDuplicates()
+        .receive(on: RunLoop.main)
+        .assign(to: \.isEnabled, on: loginButton)
+        .store(in: &cancellables)
+    }
+    
+    // MARK: - UI Updates
+    private func updateUI(with state: LoginState) {
+        switch state {
+        case .initial:
+            showLoading(false)
+        case .loading:
+            showLoading(true)
+        case .success:
+            showLoading(false)
+            navigateToHeroesList()
+        case .error(let message):
+            showLoading(false)
+            showError(message: message)
+            showLoginError()
+        }
     }
     
     // MARK: - UI Setup
@@ -105,11 +172,9 @@ class LoginViewController: UIViewController {
         // Setup login button - system appearance
         loginButton.setTitle("Continuar", for: .normal)
         loginButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        loginButton.backgroundColor = .systemBlue
-        loginButton.setTitleColor(.white, for: .normal)
+        loginButton.setTitleColor(.systemBlue, for: .normal)
         loginButton.layer.cornerRadius = 8
         loginButton.translatesAutoresizingMaskIntoConstraints = false
-        loginButton.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         contentView.addSubview(loginButton)
         
         // Setup activity indicator - system appearance
@@ -184,44 +249,6 @@ class LoginViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
-    // MARK: - Actions
-    @objc func loginButtonTapped() {
-        // Show loading state
-        showLoading(true)
-        
-        // Get login credentials
-        guard let email = usernameTextField.text, !email.isEmpty else {
-            showError(message: "Please enter your email")
-            showLoading(false)
-            showLoginError()
-            return
-        }
-        
-        guard let password = passwordTextField.text, !password.isEmpty else {
-            showError(message: "Please enter your password")
-            showLoading(false)
-            showLoginError()
-            return
-        }
-        
-        // Perform login
-        loginService.login(email: email, password: password) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.showLoading(false)
-                
-                switch result {
-                case .success:
-                    // Navigate to heroes list
-                    self?.navigateToHeroesList()
-                case .failure(let error):
-                    // Show error message
-                    self?.showError(message: error.localizedDescription)
-                    self?.showLoginError()
-                }
-            }
-        }
-    }
-    
     // MARK: - Helper Methods
     private func showLoading(_ isLoading: Bool) {
         if isLoading {
@@ -270,3 +297,7 @@ class LoginViewController: UIViewController {
         navigationController?.setViewControllers([heroesVC], animated: true)
     }
 }
+
+
+
+

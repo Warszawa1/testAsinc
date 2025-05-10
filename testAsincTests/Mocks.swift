@@ -11,118 +11,104 @@ import Combine
 
 
 class MockLoginService: LoginServiceProtocol {
-    func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
+    func login(email: String, password: String) async throws -> String {
         // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // Reduced delay for tests
-            // Accept both test credentials
-            if (email == "test@example.com" || email == "test@test.com") && password == "password" {
-                let mockToken = "mock-token-12345"
-                SecureDataService.shared.setToken(mockToken)
-                completion(.success(mockToken))
-            } else {
-                completion(.failure(NSError(
-                    domain: "MockLoginService",
-                    code: 401,
-                    userInfo: [NSLocalizedDescriptionKey: "Invalid credentials"]
-                )))
-            }
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        // Accept both test credentials
+        if (email == "test@example.com" || email == "test@test.com") && password == "password" {
+            let mockToken = "mock-token-12345"
+            SecureDataService.shared.setToken(mockToken)
+            return mockToken
+        } else {
+            throw NSError(
+                domain: "MockLoginService",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid credentials"]
+            )
         }
     }
 }
 
 class MockHeroesService: HeroesServiceProtocol {
-    func getHeroes(completion: @escaping (Result<[Hero], Error>) -> Void) {
+    func getHeroes() async throws -> [Hero] {
         // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            // Create mock heroes
-            let heroes = [
-                Hero(id: "1", favorite: true, name: "Goku", description: "The main protagonist", photo: nil),
-                Hero(id: "2", favorite: false, name: "Vegeta", description: "The prince of all Saiyans", photo: nil),
-                Hero(id: "3", favorite: true, name: "Piccolo", description: "A Namekian warrior", photo: nil),
-                Hero(id: "4", favorite: false, name: "Gohan", description: "Goku's son", photo: nil),
-                Hero(id: "5", favorite: true, name: "Trunks", description: "Vegeta's son from the future", photo: nil),
-                Hero(id: "6", favorite: false, name: "Frieza", description: "A powerful villain", photo: nil)
-            ]
-            
-            completion(.success(heroes))
-        }
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        // Create mock heroes
+        let heroes = [
+            Hero(id: "1", favorite: true, name: "Goku", description: "The main protagonist", photo: nil),
+            Hero(id: "2", favorite: false, name: "Vegeta", description: "The prince of all Saiyans", photo: nil),
+            Hero(id: "3", favorite: true, name: "Piccolo", description: "A Namekian warrior", photo: nil),
+            Hero(id: "4", favorite: false, name: "Gohan", description: "Goku's son", photo: nil),
+            Hero(id: "5", favorite: true, name: "Trunks", description: "Vegeta's son from the future", photo: nil),
+            Hero(id: "6", favorite: false, name: "Frieza", description: "A powerful villain", photo: nil)
+        ]
+        return heroes
     }
 }
+
 
 
 class MockHeroDetailService: HeroDetailServiceProtocol {
-    func getHeroTransformations(heroId: String, completion: @escaping (Result<[Transformation], Error>) -> Void) {
+    func getHeroTransformations(heroId: String) async throws -> [Transformation] {
         // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let transformations = [
-                Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
-            ]
-            completion(.success(transformations))
-        }
-    }
-}
-
-class MockApiProvider: ApiProvider {
-    // Use the real SecureDataService
-    override init(secureDataService: SecureDataService = SecureDataService.shared) {
-        super.init(secureDataService: secureDataService)
-    }
-    
-    // Override methods for testing
-    override func getTransformations(forHeroId heroId: String, completion: @escaping (Result<[ApiTransformation], Error>) -> Void) {
-        // Mock implementation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let apiTransformations = [
-                ApiTransformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil, hero: ApiTransformation.ApiHeroReference(id: heroId))
-            ]
-            completion(.success(apiTransformations))
-        }
-    }
-}
-
-class MockHeroRepository: HeroRepositoryProtocol {
-    func getHeroes() -> AnyPublisher<[Hero], Error> {
-        let heroes = [
-            Hero(id: "1", favorite: true, name: "Goku", description: "Saiyan warrior", photo: nil),
-            Hero(id: "2", favorite: false, name: "Vegeta", description: "Prince of Saiyans", photo: nil)
-        ]
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         
-        return Just(heroes)
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(100), scheduler: RunLoop.main)
-            .eraseToAnyPublisher()
-    }
-    
-    func getHeroTransformations(heroId: String) -> AnyPublisher<[Transformation], Error> {
         let transformations = [
             Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
         ]
         
-        return Just(transformations)
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(100), scheduler: RunLoop.main)
-            .eraseToAnyPublisher()
+        return transformations
+    }
+}
+
+class MockApiProvider: ApiProvider {
+    override init(secureDataService: SecureDataService = SecureDataService.shared) {
+        super.init(secureDataService: secureDataService)
+    }
+    
+    override func getTransformations(forHeroId heroId: String) async throws -> [ApiTransformation] {
+        // Mock implementation
+        try await Task.sleep(nanoseconds: 100_000_000)
+        let apiTransformations = [
+            ApiTransformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil, hero: ApiTransformation.ApiHeroReference(id: heroId))
+        ]
+        return apiTransformations
+    }
+}
+
+class MockHeroRepository: HeroRepositoryProtocol {
+    func getHeroes() async throws -> [Hero] {
+        try await Task.sleep(nanoseconds: 100_000_000)
+        let heroes = [
+            Hero(id: "1", favorite: true, name: "Goku", description: "Saiyan warrior", photo: nil),
+            Hero(id: "2", favorite: false, name: "Vegeta", description: "Prince of Saiyans", photo: nil)
+        ]
+        return heroes
+    }
+    
+    func getHeroTransformations(heroId: String) async throws -> [Transformation] {
+        try await Task.sleep(nanoseconds: 100_000_000)
+        let transformations = [
+            Transformation(id: "1", name: "Super Saiyan", description: "First form", photo: nil)
+        ]
+        return transformations
     }
 }
 
 class MockAuthRepository: AuthRepositoryProtocol {
     var logoutCalled = false
     
-    func login(email: String, password: String) -> AnyPublisher<Void, Error> {
+    func login(email: String, password: String) async throws {
         if email.isEmpty {
-            return Fail(error: NSError(domain: "MockError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Email cannot be empty"]))
-                .eraseToAnyPublisher()
+            throw NSError(domain: "MockError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Email cannot be empty"])
         }
         
         if password.isEmpty {
-            return Fail(error: NSError(domain: "MockError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Password cannot be empty"]))
-                .eraseToAnyPublisher()
+            throw NSError(domain: "MockError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Password cannot be empty"])
         }
         
-        return Just(())
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(100), scheduler: RunLoop.main)
-            .eraseToAnyPublisher()
+        try await Task.sleep(nanoseconds: 100_000_000)
     }
     
     func logout() {

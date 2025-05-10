@@ -32,34 +32,39 @@ class ApiProviderTests: XCTestCase {
     }
     
     
-    func test_login_ShouldReturnError() throws {
+    func test_login_ShouldReturnError() async throws {
         // Given
         let username = "username"
         let password = "password"
         MockURLProtocol.error = NSError(domain: "io.keepcoding", code: 401)
-        var error: Error?
         
-        // When
-        let expectation = expectation(description: "Login throw error")
-        
-        sut.login(email: username, password: password) { result in
-            expectation.fulfill()
-            switch result {
-            case .success(_):
-                XCTFail("Expected error")
-            case .failure(let responseError):
-                error = responseError
-            }
+        // When/Then
+        do {
+            _ = try await sut.login(email: username, password: password)
+            XCTFail("Expected error")
+        } catch {
+            // Expected error
+            XCTAssertNotNil(error)
         }
-        
-        // Then
-        wait(for: [expectation], timeout: 2.0) // Increased timeout
-        XCTAssertNotNil(error)
     }
     
-    func test_getHeroes_serviceError() throws {
+    func test_Transformations_serviceError() async throws {
         // Given
-        // Configure MockURLProtocol to handle requests
+        setToken()
+        MockURLProtocol.error = NSError(domain: "io.keepcoding", code: 503)
+        
+        // When/Then
+        do {
+            _ = try await sut.getTransformations(forHeroId: "idHero")
+            XCTFail("expected error")
+        } catch {
+            XCTAssertNotNil(error)
+        }
+    }
+    
+    
+    func test_getHeroes_serviceError() async throws {
+        // Given
         MockURLProtocol.requestHandler = { request in
             throw NSError(domain: "io.keepcoding", code: 503)
         }
@@ -72,48 +77,13 @@ class ApiProviderTests: XCTestCase {
         // Set token before making API call
         setToken()
         
-        var error: Error?
-        let expectation = expectation(description: "Error from server")
-        
-        // When
-        sut.getHeroes { result in
-            switch result {
-            case .success(_):
-                XCTFail("expected error")
-            case .failure(let errorServer):
-                error = errorServer
-                expectation.fulfill()
-            }
+        // When/Then
+        do {
+            _ = try await sut.getHeroes()
+            XCTFail("expected error")
+        } catch {
+            XCTAssertNotNil(error)
         }
-        
-        // Then
-        wait(for: [expectation], timeout: 3.0)
-        XCTAssertNotNil(error)
-    }
-    
-    
-    func test_Transformations_serviceError() throws {
-        // Given
-        setToken() // Set token first
-        MockURLProtocol.error = NSError(domain: "io.keepcoding", code: 503)
-        var error: Error?
-        
-        // When
-        let expectation = expectation(description: "Error from server")
-        
-        sut.getTransformations(forHeroId: "idHero") { result in
-            switch result {
-            case .success(_):
-                XCTFail("expected error")
-            case .failure(let errorServer):
-                error = errorServer
-                expectation.fulfill() // Make sure this gets called
-            }
-        }
-        
-        // Then
-        wait(for: [expectation], timeout: 3.0) // Increased timeout
-        XCTAssertNotNil(error)
     }
     
     private func setToken() {

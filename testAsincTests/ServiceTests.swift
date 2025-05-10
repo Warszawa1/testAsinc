@@ -24,44 +24,28 @@ class ServiceTests: XCTestCase {
     
     // MARK: - LoginService Tests
     
-    func testLoginService_successfulLogin() {
+    func testLoginService_successfulLogin() async throws {
         // Given
         let mockLoginService = MockLoginService()
-        let expectation = XCTestExpectation(description: "Login will complete")
         
-        // When - We'll test both success and failure paths
-        mockLoginService.login(email: "test@example.com", password: "password") { result in
-            // We don't care about success/failure - just that it completes
-            expectation.fulfill()
-        }
+        // When
+        let token = try await mockLoginService.login(email: "test@example.com", password: "password")
         
-        // Then - We just verify the call completes
-        wait(for: [expectation], timeout: 2.0)
-        
-        // This is the main assertion - we verify the mock exists and functions
-        XCTAssertNotNil(mockLoginService)
+        // Then
+        XCTAssertNotNil(token)
     }
     
     // MARK: - HeroDetailService Tests
     
-    func testHeroDetailService_fetchTransformations() {
+    func testHeroDetailService_fetchTransformations() async throws {
         // Given
         let service = HeroDetailService(apiProvider: MockApiProvider())
-        let expectation = XCTestExpectation(description: "Transformations fetched")
         
         // When
-        service.getHeroTransformations(heroId: "test-id") { result in
-            // Then
-            switch result {
-            case .success(let transformations):
-                XCTAssertFalse(transformations.isEmpty)
-                expectation.fulfill()
-            case .failure:
-                XCTFail("Fetching transformations should succeed")
-            }
-        }
+        let transformations = try await service.getHeroTransformations(heroId: "test-id")
         
-        wait(for: [expectation], timeout: 1.0)
+        // Then
+        XCTAssertFalse(transformations.isEmpty)
     }
     
     // MARK: - SecureDataService Tests
@@ -82,23 +66,14 @@ class ServiceTests: XCTestCase {
     
     // MARK: - ApiProvider Tests
     
-    func testApiProvider_transformations() {
+    func testApiProvider_transformations() async throws {
         // Given
         let apiProvider = MockApiProvider()
-        let expectation = XCTestExpectation(description: "API call completed")
         
         // When
-        apiProvider.getTransformations(forHeroId: "test-id") { result in
-            // Then
-            switch result {
-            case .success(let transformations):
-                XCTAssertFalse(transformations.isEmpty)
-                expectation.fulfill()
-            case .failure:
-                XCTFail("Should not fail")
-            }
-        }
+        let transformations = try await apiProvider.getTransformations(forHeroId: "test-id")
         
-        wait(for: [expectation], timeout: 1.0)
+        // Then
+        XCTAssertFalse(transformations.isEmpty)
     }
 }

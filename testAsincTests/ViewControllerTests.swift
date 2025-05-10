@@ -12,30 +12,25 @@ import Combine
 class HeroesViewControllerTests: XCTestCase {
     
     func testHeroesViewController_initialization() {
-        // Given
-        let mockHeroesService = MockHeroesService()
-        let sut = HeroesViewController(heroesService: mockHeroesService)
+        // Given/When
+        let sut = HeroesViewController()
         
         // Then
         XCTAssertNotNil(sut)
     }
     
     func testHeroesViewController_viewDidLoad() {
-        // Given
-        let mockHeroesService = MockHeroesService()
-        let sut = HeroesViewController(heroesService: mockHeroesService)
-        
-        // When
+        // Given/When
+        let sut = HeroesViewController()
         sut.loadViewIfNeeded()
         
-        // Then - Just verify that view loading doesn't crash
+        // Then
         XCTAssertNotNil(sut.view)
     }
     
     func testHeroesViewController_collectionViewSetup() {
         // Given
-        let mockHeroesService = MockHeroesService()
-        let sut = HeroesViewController(heroesService: mockHeroesService)
+        let sut = HeroesViewController()
         
         // When
         sut.loadViewIfNeeded()
@@ -47,8 +42,7 @@ class HeroesViewControllerTests: XCTestCase {
     
     func testHeroesViewController_loadHeroes() {
         // Given
-        let mockHeroesService = MockHeroesService()
-        let sut = HeroesViewController(heroesService: mockHeroesService)
+        let sut = HeroesViewController()
         
         // Create expectation to wait for async operation
         let expectation = XCTestExpectation(description: "Load heroes")
@@ -73,20 +67,17 @@ class HeroesViewControllerTests: XCTestCase {
 class LoginViewControllerTests: XCTestCase {
     
     func testLoginViewController_initialization() {
-        // Given
-        let mockLoginService = MockLoginService()
-        let sut = LoginViewController(loginService: mockLoginService)
+        // Given/When
+        let sut = LoginViewController()
         
         // Then
         XCTAssertNotNil(sut)
     }
+
     
     func testLoginViewController_viewDidLoad() {
-        // Given
-        let mockLoginService = MockLoginService()
-        let sut = LoginViewController(loginService: mockLoginService)
-        
-        // When
+        // Given/When
+        let sut = LoginViewController()
         sut.loadViewIfNeeded()
         
         // Then
@@ -95,7 +86,7 @@ class LoginViewControllerTests: XCTestCase {
     
     func testLoginViewController_hasRequiredUIElements() {
         // Given
-        let sut = LoginViewController(loginService: MockLoginService())
+        let sut = LoginViewController()
         
         // When
         sut.loadViewIfNeeded()
@@ -107,7 +98,7 @@ class LoginViewControllerTests: XCTestCase {
             return
         }
         
-        // Now find the content view - avoid using "is UIView" since all subviews are UIView instances
+        // Find the content view - avoid using "is UIView" since all subviews are UIView instances
         // Instead, look for a specific characteristic of your content view if possible
         // For example, if your content view is the first subview, or has a specific tag
         guard let contentView = scrollView.subviews.first else {
