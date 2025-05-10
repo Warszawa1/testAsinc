@@ -37,6 +37,16 @@ class HeroesViewModel {
         setupBindings()
     }
     
+    // MARK: - Public Methods
+    func loadHeroes() {
+        refreshTrigger.send()
+    }
+    
+    func hero(at index: Int) -> Hero? {
+        guard index < heroes.count else { return nil }
+        return heroes[index]
+    }
+    
     // MARK: - Setup
     private func setupBindings() {
         // Handle refresh trigger
@@ -54,6 +64,9 @@ class HeroesViewModel {
                         do {
                             let heroes = try await self.heroRepository.getHeroes()
                             promise(.success(.success(heroes)))
+                        } catch NetworkError.unauthorized {
+                            // Handle unauthorized specifically
+                            promise(.success(.failure(NetworkError.unauthorized)))
                         } catch {
                             promise(.success(.failure(error)))
                         }
@@ -67,26 +80,20 @@ class HeroesViewModel {
                     self?.heroes = heroes
                     self?.state = .loaded
                 case .failure(let error):
-                    self?.state = .error(message: error.localizedDescription)
+                    if case NetworkError.unauthorized = error {
+                        // Trigger logout on unauthorized
+                        self?.handleUnauthorized()
+                    } else {
+                        self?.state = .error(message: error.localizedDescription)
+                    }
                 }
             }
             .store(in: &cancellables)
+    }
         
-        // Handle logout
-        logoutTrigger
-            .sink { [weak self] _ in
-                self?.authRepository.logout()
-            }
-            .store(in: &cancellables)
-    }
-    
-    // MARK: - Public Methods
-    func loadHeroes() {
-        refreshTrigger.send()
-    }
-    
-    func hero(at index: Int) -> Hero? {
-        guard index < heroes.count else { return nil }
-        return heroes[index]
+    private func handleUnauthorized() {
+        // Clear token and notify UI
+        authRepository.logout()
+        state = .error(message: "Session expired. Please login again.")
     }
 }

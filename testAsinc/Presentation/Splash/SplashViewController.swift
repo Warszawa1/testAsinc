@@ -32,8 +32,8 @@ class SplashViewController: UIViewController {
         // Start animation immediately
         activityIndicator.startAnimating()
         
-        // Check auth after minimal delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        // Add a longer delay to ensure proper initialization
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.checkAuthAndNavigate()
         }
     }
@@ -49,8 +49,20 @@ class SplashViewController: UIViewController {
     
     private func checkAuthAndNavigate() {
         let destinationVC: UIViewController
-        if secureData.getToken() != nil {
-            destinationVC = HeroesViewController()
+        
+        // More defensive check
+        let token = secureData.getToken()
+        print("DEBUG: Token check - Token exists: \(token != nil)")
+        
+        if let token = token, !token.isEmpty {
+            // Additional validation - check if token looks valid
+            if isValidToken(token) {
+                destinationVC = HeroesViewController()
+            } else {
+                // Invalid token, clear it and go to login
+                secureData.clearToken()
+                destinationVC = LoginViewController()
+            }
         } else {
             destinationVC = LoginViewController()
         }
@@ -64,5 +76,11 @@ class SplashViewController: UIViewController {
         transition.type = .fade
         navigationController?.view.layer.add(transition, forKey: nil)
         navigationController?.setViewControllers([destinationVC], animated: false)
+    }
+    
+    private func isValidToken(_ token: String) -> Bool {
+        // Basic validation - token should not be empty or whitespace
+        let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedToken.isEmpty && trimmedToken.count > 10  // Assuming tokens are at least 10 chars
     }
 }

@@ -96,7 +96,7 @@ class HeroesViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        title = "Heroes"
+        title = "heroes.title".localized
         
         navigationItem.hidesBackButton = true
         
@@ -176,29 +176,29 @@ class HeroesViewController: UIViewController {
     
     // MARK: - Helper Methods
     private func showErrorAlert(message: String) {
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: "common.error".localized, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "common.ok".localized, style: .default))
         present(alert, animated: true)
     }
     
     @objc func logoutTapped(_ sender: Any) {
         // Create confirmation alert
         let alert = UIAlertController(
-            title: "Logout",
-            message: "Are you sure you want to log out?",
+            title: "login.title".localized,
+            message: "logout.confirm.message".localized,
             preferredStyle: .alert
         )
         
         // Cancel action
         alert.addAction(UIAlertAction(
-            title: "Cancel",
+            title: "common.cancel".localized,
             style: .cancel,
             handler: nil
         ))
         
         // Logout action
         alert.addAction(UIAlertAction(
-            title: "Logout",
+            title: "logout.confirm.title".localized,
             style: .destructive,
             handler: { [weak self] _ in
                 // Perform logout

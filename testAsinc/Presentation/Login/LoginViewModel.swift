@@ -43,11 +43,11 @@ class LoginViewModel {
                 
                 // Simple validation for empty fields
                 if self.email.isEmpty && self.password.isEmpty {
-                    return Just(.error(message: "Por favor, completa todos los campos")).eraseToAnyPublisher()
+                    return Just(.error(message: "login.error.emptyFields".localized)).eraseToAnyPublisher()
                 } else if self.email.isEmpty {
-                    return Just(.error(message: "Por favor, introduce tu email")).eraseToAnyPublisher()
+                    return Just(.error(message: "login.error.emptyEmail".localized)).eraseToAnyPublisher()
                 } else if self.password.isEmpty {
-                    return Just(.error(message: "Por favor, introduce tu contraseña")).eraseToAnyPublisher()
+                    return Just(.error(message: "login.error.emptyPassword".localized)).eraseToAnyPublisher()
                 }
                 
                 // Create a future that handles the async login
@@ -58,7 +58,7 @@ class LoginViewModel {
                             promise(.success(.success))
                         } catch {
                             // Simply show wrong credentials for any login error
-                            promise(.success(.error(message: "Usuario o contraseña incorrectos")))
+                            promise(.success(.error(message: "login.error.invalidCredentials".localized)))
                         }
                     }
                 }

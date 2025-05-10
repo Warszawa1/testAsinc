@@ -57,7 +57,7 @@ class HeroDetailViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 20, weight: .bold)
-        label.text = String(localized: "detail.transformations")
+        label.text = "detail.transformations".localized
         return label
     }()
     
@@ -81,7 +81,7 @@ class HeroDetailViewController: UIViewController {
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
-        label.text = String(localized: "detail.noTransformations")
+        label.text = "detail.noTransformations".localized
         label.isHidden = true
         return label
     }()

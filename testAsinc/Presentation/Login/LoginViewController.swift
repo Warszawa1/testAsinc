@@ -143,7 +143,7 @@ class LoginViewController: UIViewController {
         contentView.addSubview(logoImageView)
         
         // Setup username text field - system appearance
-        usernameTextField.placeholder = "Usuario"
+        usernameTextField.placeholder = "login.email".localized
         usernameTextField.borderStyle = .roundedRect
         usernameTextField.backgroundColor = UIColor.systemGray6
         usernameTextField.textColor = .label
@@ -153,7 +153,7 @@ class LoginViewController: UIViewController {
         contentView.addSubview(usernameTextField)
         
         // Setup password text field - system appearance
-        passwordTextField.placeholder = "Contraseña"
+        passwordTextField.placeholder = "login.password".localized
         passwordTextField.borderStyle = .roundedRect
         passwordTextField.backgroundColor = UIColor.systemGray6
         passwordTextField.textColor = .label
@@ -162,7 +162,7 @@ class LoginViewController: UIViewController {
         contentView.addSubview(passwordTextField)
         
         // Setup login button - system appearance
-        loginButton.setTitle("Continuar", for: .normal)
+        loginButton.setTitle("login.button".localized, for: .normal)
         loginButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
         loginButton.setTitleColor(.systemBlue, for: .normal)
         loginButton.layer.cornerRadius = 8
@@ -264,7 +264,7 @@ class LoginViewController: UIViewController {
         
         // Then show the alert
         let alert = UIAlertController(
-            title: "Error de Login",
+            title: "login.error.invalidCredentials".localized,
             message: message,
             preferredStyle: .alert
         )

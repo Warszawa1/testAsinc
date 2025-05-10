@@ -40,12 +40,32 @@ final class SecureDataService: SecureDataServiceProtocol {
     
     // MARK: - Public Methods
     func getToken() -> String? {
-        return keychain.get(tokenKey)
+        let token = keychain.get(tokenKey)
+        
+        // Validate token before returning
+        if let token = token, isValidToken(token) {
+            return token
+        } else {
+            // Clear invalid token
+            if token != nil {
+                clearToken()
+            }
+            return nil
+        }
+    }
+    
+    private func isValidToken(_ token: String) -> Bool {
+        // Basic validation
+        let trimmedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedToken.isEmpty && trimmedToken.count > 10
     }
     
     func setToken(_ token: String) {
-        keychain.set(token, forKey: tokenKey)
-        tokenSubject.send(token)
+        // Only set valid tokens
+        if isValidToken(token) {
+            keychain.set(token, forKey: tokenKey)
+            tokenSubject.send(token)
+        }
     }
     
     func clearToken() {

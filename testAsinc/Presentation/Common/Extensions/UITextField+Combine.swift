@@ -58,9 +58,16 @@ final class ControlSubscription<S: Subscriber, Control: UIControl>: Subscription
     
     func cancel() {
         subscriber = nil
+        // Also remove the target when cancelling
+        control.removeTarget(self, action: #selector(eventHandler), for: .allEvents)
     }
     
     @objc private func eventHandler() {
         _ = subscriber?.receive(control)
+    }
+    
+    deinit {
+        // Remove the target to break the retain cycle
+        control.removeTarget(self, action: #selector(eventHandler), for: .allEvents)
     }
 }
