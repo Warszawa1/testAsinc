@@ -6,7 +6,7 @@ testAsinc es una aplicación iOS que permite explorar el universo Dragon Ball, v
 
 ## 📱 Capturas de Pantalla
 
-![Login Screen](Screenshots/login.jpg)
+![Image](https://github.com/user-attachments/assets/57bfbe5a-114c-43b6-9c00-a00e72270a60)
 
 
 ## ✨ Características Principales
